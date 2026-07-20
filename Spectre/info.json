@@ -1,0 +1,10 @@
+{
+  "Id": "Spectre",
+  "DisplayName": "Spectre",
+  "Author": "HitMargin",
+  "Version": "1.0.0",
+  "AssemblyName": "Spectre.dll",
+  "EntryMethod": "Spectre.Main.Load",
+  "HomePage": "https://github.com/HitMargin/Spectre",
+  "Repository": "https://raw.githubusercontent.com/HitMargin/Spectre/refs/heads/master/Repository.json"
+}
