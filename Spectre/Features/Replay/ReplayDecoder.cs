@@ -169,6 +169,7 @@ internal static class ReplayDecoder
         m.KeybdSoundHash = GvS(old.strings, KeybdSoundHash);
 
         m.StartTile = GvI(old.ints, StartTile);
+        m.TotalFloorCount = GvI(old.ints, EndTile) + 1;
         m.FloorHash = GvI(old.ints, FloorHash);
         m.SpeedHash = GvI(old.ints, SpeedHash);
         m.TimeHash = GvI(old.ints, TimeHash);
@@ -219,6 +220,7 @@ internal static class ReplayDecoder
         old.strings[KeybdSoundHash] = m.KeybdSoundHash;
 
         old.ints[StartTile] = m.StartTile;
+        old.ints[EndTile] = m.TotalFloorCount - 1;
         old.ints[FloorHash] = m.FloorHash;
         old.ints[SpeedHash] = m.SpeedHash;
         old.ints[TimeHash] = m.TimeHash;

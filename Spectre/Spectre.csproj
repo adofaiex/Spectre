@@ -156,6 +156,10 @@
     <Compile Include="Features\Replay\Patch_Misc.cs" />
     <Compile Include="Features\Replay\ReplayRecorderYch.cs" />
     <Compile Include="Features\Replay\ReplayManager.cs" />
+    <Compile Include="Features\Replay\ReplayCrypto.cs" />
+    <Compile Include="Features\Replay\ReplayDataModels.cs" />
+    <Compile Include="Features\Replay\ReplayBinaryIO.cs" />
+    <Compile Include="Features\Replay\ReplayCrp2Codec.cs" />
     <Compile Include="Features\Replay\LegacyReplayData.cs" />
     <Compile Include="Features\Replay\keyEvent.cs" />
     <Compile Include="Features\Replay\HitContext.cs" />
