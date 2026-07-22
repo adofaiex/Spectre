@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using static Spectre.SpectreState;
@@ -33,13 +34,15 @@ internal static class ReplayPlayer
         is_playing = false;
         if (PlayMode && Options.LegacyEngine)
         {
+            var releases = new List<KeyboardSimulation.INPUT>();
             for (int i = 1; i < 256; i++)
             {
                 if ((CurrKeyState[i] & 0x80) != 0)
                 {
-                    KeyboardSimulation.ReleaseKey((byte)i);
+                    releases.Add(KeyboardSimulation.MakeInput((byte)i, false, IsExtendedKey((ushort)i)));
                 }
             }
+            KeyboardSimulation.SendInputs(releases);
         }
         scrController.instance.noFail = CachedNoFail ?? false;
         CachedNoFail = null;
@@ -93,31 +96,36 @@ internal static class ReplayPlayer
         {
             return;
         }
-        KeyEvent KeyEvent2 = data.KeyEvent_list[KeyEventIndex];
-        while (ADOBase.conductor.songposition_minusi >= KeyEvent2.SongPosition)
+        // 无待办事件时提前返回，避免空 List 分配
+        if (ADOBase.conductor.songposition_minusi < data.KeyEvent_list[KeyEventIndex].SongPosition)
+            return;
+
+        var inputs = new List<KeyboardSimulation.INPUT>();
+        while (KeyEventIndex < data.KeyEvent_list.Count
+               && ADOBase.conductor.songposition_minusi >= data.KeyEvent_list[KeyEventIndex].SongPosition)
         {
+            var ev = data.KeyEvent_list[KeyEventIndex];
             if (Options.LegacyEngine && Application.isFocused)
             {
-                ushort num = Options.key_code_convert[KeyEvent2.KeyCode];
+                ushort num = Options.key_code_convert[ev.KeyCode];
                 if (num != 0 && num != 27 && !IsBlockedKey(num))
                 {
-                    KeyboardSimulation.SendKey((byte)num, KeyEvent2.IsPressed, IsExtendedKey(num));
-                    CurrKeyState[num] = (byte)(KeyEvent2.IsPressed ? 128u : 0u);
+                    inputs.Add(KeyboardSimulation.MakeInput((byte)num, ev.IsPressed, IsExtendedKey(num)));
+                    CurrKeyState[num] = (byte)(ev.IsPressed ? 128u : 0u);
                 }
             }
             KeyEventIndex++;
-            if (KeyEventIndex >= data.KeyEvent_list.Count)
+        }
+        KeyboardSimulation.SendInputs(inputs);
+        if (KeyEventIndex >= data.KeyEvent_list.Count)
+        {
+            if (flag)
             {
-                if (flag)
-                {
-                    KeyEventIndex = 0;
-                    PlayIndex = 0;
-                    Stop();
-                    TriggerMessage(LocalizationManager.GetLocalizedText("note.stop_playing"));
-                }
-                break;
+                KeyEventIndex = 0;
+                PlayIndex = 0;
+                Stop();
+                TriggerMessage(LocalizationManager.GetLocalizedText("note.stop_playing"));
             }
-            KeyEvent2 = data.KeyEvent_list[KeyEventIndex];
         }
     }
 

@@ -1,37 +1,95 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Spectre.Features.Replay;
 
 internal static class KeyboardSimulation
 {
+    private const uint INPUT_KEYBOARD = 1;
+    private const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
+    private const uint KEYEVENTF_KEYUP = 0x0002;
+
     [DllImport("user32.dll", SetLastError = true)]
-    private static extern void keybd_event(byte bVk, byte bScan, int dwFlags, int dwExtraInfo);
+    private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 
     [DllImport("user32.dll", SetLastError = true)]
     internal static extern int GetKeyboardState(byte[] pbKeyState);
 
-    [DllImport("user32.dll", SetLastError = true)]
-    internal static extern uint MapVirtualKey(uint uCode, uint uMapType);
-
-    private const int KEYEVENTF_KEYDOWN = 0;
-    private const int KEYEVENTF_KEYUP = 2;
-    private const int KEYEVENTF_EXTENDEDKEY = 1;
-
-    public static void PressKey(byte keyCode, bool isExtended = false)
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct KEYBDINPUT
     {
-        int flags = isExtended ? KEYEVENTF_EXTENDEDKEY : 0;
-        keybd_event(keyCode, 0, flags, 0);
+        public ushort wVk;
+        public ushort wScan;
+        public uint dwFlags;
+        public uint time;
+        public IntPtr dwExtraInfo;
     }
 
-    public static void ReleaseKey(byte keyCode, bool isExtended = false)
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct MOUSEINPUT
     {
-        int flags = KEYEVENTF_KEYUP | (isExtended ? KEYEVENTF_EXTENDEDKEY : 0);
-        keybd_event(keyCode, 0, flags, 0);
+        public int dx;
+        public int dy;
+        public uint mouseData;
+        public uint dwFlags;
+        public uint time;
+        public IntPtr dwExtraInfo;
     }
 
-    public static void SendKey(byte keyCode, bool press, bool isExtended = false)
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct HARDWAREINPUT
     {
-        if (press) PressKey(keyCode, isExtended);
-        else ReleaseKey(keyCode, isExtended);
+        public uint uMsg;
+        public ushort wParamL;
+        public ushort wParamH;
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    internal struct InputUnion
+    {
+        [FieldOffset(0)] public MOUSEINPUT mi;
+        [FieldOffset(0)] public KEYBDINPUT ki;
+        [FieldOffset(0)] public HARDWAREINPUT hi;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct INPUT
+    {
+        public uint type;
+        public InputUnion u;
+    }
+
+    internal static INPUT MakeInput(byte keyCode, bool press, bool isExtended = false)
+    {
+        uint flags = press ? 0u : KEYEVENTF_KEYUP;
+        if (isExtended) flags |= KEYEVENTF_EXTENDEDKEY;
+        return new INPUT
+        {
+            type = INPUT_KEYBOARD,
+            u = new InputUnion
+            {
+                ki = new KEYBDINPUT
+                {
+                    wVk = keyCode,
+                    wScan = 0,
+                    dwFlags = flags,
+                    time = 0,
+                    dwExtraInfo = IntPtr.Zero
+                }
+            }
+        };
+    }
+
+    internal static void SendInputs(List<INPUT> inputs)
+    {
+        if (inputs.Count == 0) return;
+        SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf<INPUT>());
+    }
+
+    internal static void SendInputs(INPUT[] inputs)
+    {
+        if (inputs.Length == 0) return;
+        SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
     }
 }
