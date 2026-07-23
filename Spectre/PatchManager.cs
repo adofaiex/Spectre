@@ -26,7 +26,7 @@ internal static class PatchManager
     private static CancellationTokenSource _lazyPollCts;
     private static Task _lazyPollTask;
     private static volatile bool _isQuitting = false;
-    private static bool _sceneIsLoading = false;
+    private static volatile bool _sceneIsLoading = false;
 
     public static void Initialize(Harmony harmony)
     {
@@ -61,12 +61,18 @@ internal static class PatchManager
 
     private static void OnSceneUnloaded(Scene scene)
     {
-        _sceneIsLoading = true;  // 暂停轮询
+        lock (_lock)
+        {
+            _sceneIsLoading = true;
+        }
     }
 
     private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        _sceneIsLoading = false; // 恢复轮询
+        lock (_lock)
+        {
+            _sceneIsLoading = false;
+        }
     }
 
     public static void RegisterPatch(Type patchType, Func<bool> toggle = null)
@@ -246,20 +252,17 @@ internal static class PatchManager
         var token = cts.Token;
         try
         {
-            while (!token.IsCancellationRequested && !_isQuitting)
+            while (!token.IsCancellationRequested)
             {
-                if (!_sceneIsLoading)
+                try
                 {
-                    try
-                    {
-                        ApplyLazyPatches();
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogError($"[PatchManager] ApplyLazyPatches error: {ex}");
-                    }
-                    await Task.Delay(100, token).ConfigureAwait(false);
+                    ApplyLazyPatches();
                 }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"[PatchManager] ApplyLazyPatches error: {ex}");
+                }
+                await Task.Delay(100, token).ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException) { }
@@ -279,9 +282,9 @@ internal static class PatchManager
 
     private static void ApplyLazyPatches()
     {
-        if (_isQuitting || _sceneIsLoading) return;
         lock (_lock)
         {
+            if (_isQuitting || _sceneIsLoading) return;
             if (_harmony == null) return;
             foreach (var registration in _registeredPatches.Values)
             {

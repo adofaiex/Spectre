@@ -73,6 +73,8 @@ public static class ConfigManager
         };
         string contents = JsonConvert.SerializeObject(data, Formatting.Indented);
         string directoryName = Path.GetDirectoryName(filePath);
+        if (string.IsNullOrEmpty(directoryName))
+            return;
         if (!Directory.Exists(directoryName))
             Directory.CreateDirectory(directoryName);
         File.WriteAllText(filePath, contents);

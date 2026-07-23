@@ -4,7 +4,7 @@ internal static class ReplayConstants
 {
     public const ulong Magic = 0x6C70_7263_5250_53;      // "SPRrcplp"
     public const ulong LegacyMagic = 0x6C70_7263_5052_43; // "CRPrcplp" (pre-Spectre)
-    public const int FormatVersion = 1;
+    public const int FormatVersion = 2;
 
     public const ulong MagicMetadata = 0x61_7461_6461_7465_4D;
     public const int MetadataVersion = 2;

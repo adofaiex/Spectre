@@ -33,6 +33,12 @@ internal static class ReplayDecoder
 
         var replay = new Replay();
         replay.Metadata = ReadMetadata(r);
+        if (version >= 2)
+        {
+            string endTimeStr = r.ReadString();
+            if (!string.IsNullOrEmpty(endTimeStr))
+                replay.EndTime = DateTimeOffset.Parse(endTimeStr);
+        }
         replay.KeyEvents = ReadKeyEvents(r);
         replay.HitContexts = ReadHitContexts(r);
         return replay;

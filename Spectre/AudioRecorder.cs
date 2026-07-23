@@ -202,13 +202,6 @@ public class AudioRecorder : MonoBehaviour
         }
         lock (bufferLock)
         {
-            lock (hashLock)
-            {
-                if (hashAlgorithm != null && !isHashFinalized)
-                {
-                    hashAlgorithm.TransformBlock(array, 0, array.Length, null, 0);
-                }
-            }
             if (fileStream != null && fileStream.CanWrite)
             {
                 if (wavDataBuffer.Count != 0)
@@ -225,6 +218,13 @@ public class AudioRecorder : MonoBehaviour
                     wavDataBuffer.Clear();
                 }
                 fileStream.Write(array, 0, array.Length);
+                lock (hashLock)
+                {
+                    if (hashAlgorithm != null && !isHashFinalized)
+                    {
+                        hashAlgorithm.TransformBlock(array, 0, array.Length, null, 0);
+                    }
+                }
             }
             else
             {
@@ -415,14 +415,14 @@ public class AudioRecorder : MonoBehaviour
             fileStream.Close();
             fileStream = null;
         }
-        if (recordingClip != (UnityEngine.Object)null && End_microphone)
+        if (recordingClip != (UnityEngine.Object)null)
         {
             UnityEngine.Object.Destroy(recordingClip);
             recordingClip = null;
-            if (!string.IsNullOrEmpty(microphoneDevice))
-            {
-                Microphone.End(microphoneDevice);
-            }
+        }
+        if (End_microphone && !string.IsNullOrEmpty(microphoneDevice))
+        {
+            Microphone.End(microphoneDevice);
         }
         lock (bufferLock)
         {

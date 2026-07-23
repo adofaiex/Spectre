@@ -128,6 +128,9 @@ internal class Patch_PlayerControlUpdate
         if (!HasKeybdSound)
             return;
 
+        if (!data.doubles.ContainsKey(KeybdSoundStartTick))
+            return;
+
         float num = ((float)(ADOBase.conductor.songposition_minusi
             - data.doubles[KeybdSoundStartTick])
             + (float)scrConductor.currentPreset.inputOffset / 1000f

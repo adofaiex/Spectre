@@ -149,6 +149,8 @@ public static class Options
     internal static void key_convert_list2array()
     {
         key_code_convert = new ushort[256];
+        for (int i = 0; i < 256; i++)
+            key_code_convert[i] = 0xFFFF;
         if (!LimitKey || !KeyConvertEnabled)
         {
             for (ushort num = 0; num < 256; num++)
@@ -217,7 +219,7 @@ public static class Options
         key_convert_list2array();
         for (ushort num = 0; num < 256; num++)
         {
-            if (key_code_convert[num] == 0)
+            if (key_code_convert[num] == 0xFFFF)
                 key_code_convert[num] = num;
         }
         SpectreState.save_button = (KeyCode)SaveButton;

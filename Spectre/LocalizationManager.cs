@@ -1767,6 +1767,8 @@ public static class LocalizationManager
         lang ??= currentLanguage;
         if (languageData.TryGetValue(lang, out var dict) && dict.TryGetValue(key, out var val))
             return val;
+        if (lang != "en" && languageData.TryGetValue("en", out var enDict) && enDict.TryGetValue(key, out var enVal))
+            return enVal;
         return key;
     }
 

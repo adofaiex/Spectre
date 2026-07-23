@@ -23,6 +23,7 @@ internal static class ReplayRecorder
             AllAutoHits = true;
             LateSaveMode = false;
             IgnoreMarkFail = false;
+            PrevKeyState = new byte[256];
             if (Options.GetDataFromAsyncInput)
             {
                 RecordStartTick = (ulong)DateTime.Now.Ticks;
@@ -81,6 +82,7 @@ internal static class ReplayRecorder
 
     internal static void RecordKeyboardState(bool forceSync = false)
     {
+        if (data == null) return;
         if (ADOBase.controller != null)
         {
             data.ints.TryGetValue(MaximumUsedKeys, out int prev);

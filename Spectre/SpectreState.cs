@@ -383,12 +383,15 @@ public static class SpectreState
 
     public static double ComputePercentXacc()
     {
-        return (1.0 * (double)HitMarginCounts[3] + 1.0 * (double)HitMarginCounts[10] + 0.75 * (double)HitMarginCounts[2] + 0.75 * (double)HitMarginCounts[4] + 0.4 * (double)HitMarginCounts[1] + 0.4 * (double)HitMarginCounts[5] + 0.2 * (double)HitMarginCounts[0] + 0.2 * (double)HitMarginCounts[6]) / (double)scrController.instance.playerOne.marginTracker.hitMargins.Count;
+        var tracker = scrController.instance?.playerOne?.marginTracker;
+        if (tracker == null || tracker.hitMargins == null || tracker.hitMargins.Count == 0)
+            return 0.0;
+        return (1.0 * (double)HitMarginCounts[3] + 1.0 * (double)HitMarginCounts[10] + 0.75 * (double)HitMarginCounts[2] + 0.75 * (double)HitMarginCounts[4] + 0.4 * (double)HitMarginCounts[1] + 0.4 * (double)HitMarginCounts[5] + 0.2 * (double)HitMarginCounts[0] + 0.2 * (double)HitMarginCounts[6]) / (double)tracker.hitMargins.Count;
     }
 
     public static double ComputePercentComplete(int curr_floor)
     {
-        if (scrController.instance != null)
+        if (scrController.instance != null && ADOBase.lm != null)
         {
             return (float)(curr_floor + 1) / (float)ADOBase.lm.listFloors.Count;
         }

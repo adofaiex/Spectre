@@ -104,15 +104,24 @@ internal static class ReplayBinaryIO
     private static Dictionary<string, string> ReadStringDict(BinaryReader r)
     {
         int n = r.ReadInt32();
+        if (n < 0 || n > 100000)
+            throw new InvalidDataException("String dict count out of range");
         var d = new Dictionary<string, string>(n);
         for (int i = 0; i < n; i++)
-            d[r.ReadString()] = r.ReadString();
+        {
+            string key = r.ReadString();
+            if (d.ContainsKey(key))
+                throw new InvalidDataException($"Duplicate key in string dict: {key}");
+            d[key] = r.ReadString();
+        }
         return d;
     }
 
     private static Dictionary<string, bool> ReadBoolDict(BinaryReader r)
     {
         int n = r.ReadInt32();
+        if (n < 0 || n > 100000)
+            throw new InvalidDataException("Bool dict count out of range");
         var d = new Dictionary<string, bool>(n);
         for (int i = 0; i < n; i++)
             d[r.ReadString()] = r.ReadBoolean();
@@ -122,6 +131,8 @@ internal static class ReplayBinaryIO
     private static Dictionary<string, int> ReadIntDict(BinaryReader r)
     {
         int n = r.ReadInt32();
+        if (n < 0 || n > 100000)
+            throw new InvalidDataException("Int dict count out of range");
         var d = new Dictionary<string, int>(n);
         for (int i = 0; i < n; i++)
             d[r.ReadString()] = r.ReadInt32();
@@ -131,6 +142,8 @@ internal static class ReplayBinaryIO
     private static Dictionary<string, double> ReadDoubleDict(BinaryReader r)
     {
         int n = r.ReadInt32();
+        if (n < 0 || n > 100000)
+            throw new InvalidDataException("Double dict count out of range");
         var d = new Dictionary<string, double>(n);
         for (int i = 0; i < n; i++)
             d[r.ReadString()] = r.ReadDouble();
@@ -175,6 +188,8 @@ internal static class ReplayBinaryIO
     private static List<ushort> ReadUshortList(BinaryReader r)
     {
         int n = r.ReadInt32();
+        if (n < 0 || n > 100000)
+            throw new InvalidDataException("Ushort list count out of range");
         var l = new List<ushort>(n);
         for (int i = 0; i < n; i++) l.Add(r.ReadUInt16());
         return l;
@@ -183,6 +198,8 @@ internal static class ReplayBinaryIO
     private static List<int> ReadIntList(BinaryReader r)
     {
         int n = r.ReadInt32();
+        if (n < 0 || n > 100000)
+            throw new InvalidDataException("Int list count out of range");
         var l = new List<int>(n);
         for (int i = 0; i < n; i++) l.Add(r.ReadInt32());
         return l;
@@ -191,6 +208,8 @@ internal static class ReplayBinaryIO
     private static List<double> ReadDoubleList(BinaryReader r)
     {
         int n = r.ReadInt32();
+        if (n < 0 || n > 100000)
+            throw new InvalidDataException("Double list count out of range");
         var l = new List<double>(n);
         for (int i = 0; i < n; i++) l.Add(r.ReadDouble());
         return l;
@@ -199,6 +218,8 @@ internal static class ReplayBinaryIO
     private static List<float> ReadFloatList(BinaryReader r)
     {
         int n = r.ReadInt32();
+        if (n < 0 || n > 100000)
+            throw new InvalidDataException("Float list count out of range");
         var l = new List<float>(n);
         for (int i = 0; i < n; i++) l.Add(r.ReadSingle());
         return l;
@@ -207,6 +228,8 @@ internal static class ReplayBinaryIO
     private static List<byte> ReadByteList(BinaryReader r)
     {
         int n = r.ReadInt32();
+        if (n < 0 || n > 100000)
+            throw new InvalidDataException("Byte list count out of range");
         var l = new List<byte>(n);
         for (int i = 0; i < n; i++) l.Add(r.ReadByte());
         return l;

@@ -10,6 +10,8 @@ public static class WavLoader
 {
     private struct WavHeader
     {
+        public int FormatTag;
+
         public int Channels;
 
         public int SampleRate;
@@ -22,7 +24,7 @@ public static class WavLoader
 
         public int TotalSamples;
 
-        public bool IsValid => Channels > 0 && SampleRate > 0 && (BitsPerSample == 8 || BitsPerSample == 16 || BitsPerSample == 24 || BitsPerSample == 32);
+        public bool IsValid => FormatTag > 0 && Channels > 0 && SampleRate > 0 && (BitsPerSample == 8 || BitsPerSample == 16 || BitsPerSample == 24 || BitsPerSample == 32);
     }
 
     public static AudioClip loaded_clip;
@@ -123,9 +125,20 @@ public static class WavLoader
             {
                 string text3 = new string(binaryReader.ReadChars(4));
                 int num = binaryReader.ReadInt32();
+                if (num < 0 || memoryStream.Position + num > memoryStream.Length)
+                {
+                    Debug.LogError($"[WavLoader] 无效的块大小: {num}");
+                    return result;
+                }
                 if (text3 == "fmt ")
                 {
+                    if (num < 16)
+                    {
+                        Debug.LogError($"[WavLoader] fmt 块太小: {num}");
+                        return result;
+                    }
                     int num2 = binaryReader.ReadInt16();
+                    result.FormatTag = num2;
                     if (num2 != 1 && num2 != 3)
                     {
                         Debug.LogError($"[WavLoader] 不支持的音频格式: {num2}（仅支持 PCM）");
@@ -145,9 +158,19 @@ public static class WavLoader
                 {
                     if (text3 == "data")
                     {
+                        if (num <= 0)
+                        {
+                            Debug.LogError($"[WavLoader] data 块大小无效: {num}");
+                            return result;
+                        }
                         result.DataSize = num;
                         result.DataOffset = (int)memoryStream.Position;
                         result.TotalSamples = num / (result.Channels * (result.BitsPerSample / 8));
+                        if (result.TotalSamples <= 0)
+                        {
+                            Debug.LogError($"[WavLoader] data 块数据不足以构成任何样本: {num} 字节");
+                            return result;
+                        }
                         break;
                     }
                     binaryReader.ReadBytes(num);
@@ -164,11 +187,12 @@ public static class WavLoader
         float[] array = new float[num2];
         for (int i = 0; i < num2; i++)
         {
-            int num3 = header.DataOffset + i * num;
-            if (num3 + num > wavData.Length)
+            long longOffset = header.DataOffset + (long)i * num;
+            if (longOffset + num > wavData.Length)
             {
                 break;
             }
+            int num3 = (int)longOffset;
             switch (header.BitsPerSample)
             {
                 case 8:
@@ -192,7 +216,7 @@ public static class WavLoader
                     }
                 case 32:
                     {
-                        if (header.DataSize / header.TotalSamples == 4 * header.Channels)
+                        if (header.FormatTag == 3)
                         {
                             array[i] = BitConverter.ToSingle(wavData, num3);
                             break;
@@ -216,11 +240,12 @@ public static class WavLoader
         float[] array = new float[num2];
         for (int i = 0; i < num2; i++)
         {
-            int num3 = i * num;
-            if (num3 + num > length)
+            long longOffset = (long)i * num;
+            if (longOffset + num > length)
             {
                 break;
             }
+            int num3 = (int)longOffset;
             switch (bitsPerSample)
             {
                 case 16:

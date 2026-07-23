@@ -81,7 +81,7 @@ internal static class Patch_Hit
         {
             PlayActions.StopPlaying();
             PlayActions.StopRecording();
-            Debug.Log("hit error: " + ex.Message);
+            Debug.LogException(ex);
         }
         return false;
     }

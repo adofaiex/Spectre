@@ -31,46 +31,20 @@ public static class SpectreAPI
     {
         SpectreState.PlayActions.StopPlaying();
         SpectreState.ApiBlockPlaying = true;
-        if (BlockSources == null)
-        {
-            BlockSources = new Dictionary<string, string>();
-        }
-        if (msg != null)
-        {
-            BlockSources[source] = msg;
-        }
-        else
-        {
-            BlockSources[source] = "";
-        }
+        BlockSources[source] = msg ?? "";
     }
 
     public static void BlockPlaying(string msg)
     {
         SpectreState.PlayActions.StopPlaying();
         SpectreState.ApiBlockPlaying = true;
-        if (BlockSources == null)
-        {
-            BlockSources = new Dictionary<string, string>();
-        }
-        if (msg != null)
-        {
-            BlockSources[""] = msg;
-        }
-        else
-        {
-            BlockSources[""] = "";
-        }
+        BlockSources[""] = msg ?? "";
     }
 
     public static void AllowPlaying(string source)
     {
-        if (BlockSources == null)
-        {
-            BlockSources = new Dictionary<string, string>();
-        }
         BlockSources.Remove(source);
-        if (BlockSources.Count() == 0)
+        if (BlockSources.Count == 0)
         {
             SpectreState.ApiBlockPlaying = false;
         }
@@ -78,12 +52,8 @@ public static class SpectreAPI
 
     public static void AllowPlaying()
     {
-        if (BlockSources == null)
-        {
-            BlockSources = new Dictionary<string, string>();
-        }
         BlockSources.Remove("");
-        if (BlockSources.Count() == 0)
+        if (BlockSources.Count == 0)
         {
             SpectreState.ApiBlockPlaying = false;
         }

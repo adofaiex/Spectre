@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using UnityEngine;
 
 namespace Spectre.Features.Replay;
 
@@ -84,12 +85,16 @@ internal static class KeyboardSimulation
     internal static void SendInputs(List<INPUT> inputs)
     {
         if (inputs.Count == 0) return;
-        SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf<INPUT>());
+        uint result = SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf<INPUT>());
+        if (result == 0)
+            Debug.LogWarning("SendInput failed: all inputs returned 0");
     }
 
     internal static void SendInputs(INPUT[] inputs)
     {
         if (inputs.Length == 0) return;
-        SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
+        uint result = SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
+        if (result == 0)
+            Debug.LogWarning("SendInput failed: all inputs returned 0");
     }
 }

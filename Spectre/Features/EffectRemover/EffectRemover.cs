@@ -104,7 +104,8 @@ internal static partial class EffectRemover
         if (events.Count == 0) return;
 
         HashSet<LevelEventType> eventSet = new HashSet<LevelEventType>(events);
-        levelData.levelEvents.RemoveAll(data => data != null && eventSet.Contains(data.eventType));
+        if (levelData.levelEvents != null)
+            levelData.levelEvents.RemoveAll(data => data != null && eventSet.Contains(data.eventType));
     }
 
     private static void AddFilterEvents(List<LevelEventType> events)
@@ -122,8 +123,10 @@ internal static partial class EffectRemover
     {
         events.Add(Event(13));
 
-        levelData.backgroundSettings = new LevelEvent(0, Event(7), GCS.settingsInfo["BackgroundSettings"]);
-        levelData.miscSettings["bgVideo"] = "";
+        if (GCS.settingsInfo.TryGetValue("BackgroundSettings", out var bgSettings))
+            levelData.backgroundSettings = new LevelEvent(0, Event(7), bgSettings);
+        if (levelData.miscSettings != null)
+            levelData.miscSettings["bgVideo"] = "";
     }
 
     private static void RemoveCameras(List<LevelEventType> events, LevelData levelData)
@@ -135,18 +138,21 @@ internal static partial class EffectRemover
         float zoom = Options.EffectRemoverCameraZoomScale;
         if (zoom < 100f) zoom = 100f;
         if (zoom > 1000f) zoom = 1000f;
-        Options.EffectRemoverCameraZoomScale = zoom;
 
-        levelData.cameraSettings = new LevelEvent(0, Event(8), GCS.settingsInfo["CameraSettings"]);
-        levelData.cameraSettings["zoom"] = zoom;
+        if (GCS.settingsInfo.TryGetValue("CameraSettings", out var camSettings))
+        {
+            levelData.cameraSettings = new LevelEvent(0, Event(8), camSettings);
+            levelData.cameraSettings["zoom"] = zoom;
+        }
     }
 
     private static void RemoveDecorations(List<LevelEventType> events, LevelData levelData)
     {
         if (Options.EffectRemoverRemoveAllDecorations)
         {
-            levelData.decorations.Clear();
-            levelData.decorationSettings = new LevelEvent(0, Event(11), GCS.settingsInfo["DecorationSettings"]);
+            levelData.decorations?.Clear();
+            if (GCS.settingsInfo.TryGetValue("DecorationSettings", out var decSettings))
+                levelData.decorationSettings = new LevelEvent(0, Event(11), decSettings);
 
             events.Add(Event(11));
             events.Add(Event(19));
@@ -261,7 +267,7 @@ internal static partial class EffectRemover
     {
         events.Add(Event(16));
 
-        if (Options.EffectRemoverResetTrackAnimation)
+        if (Options.EffectRemoverResetTrackAnimation && levelData.trackSettings != null)
         {
             levelData.trackSettings["trackAppearAnimation"] = TrackAnimationType.Fade;
             levelData.trackSettings["trackDisappearAnimation"] = TrackAnimationType.Fade;
@@ -275,7 +281,7 @@ internal static partial class EffectRemover
         events.Add(Event(15));
         events.Add(Event(17));
 
-        if (Options.EffectRemoverResetTrackColor)
+        if (Options.EffectRemoverResetTrackColor && levelData.trackSettings != null)
         {
             levelData.trackSettings["trackStyle"] = TrackStyle.Standard;
             levelData.trackSettings["trackColor"] = "debb7bff";

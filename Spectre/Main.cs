@@ -44,7 +44,7 @@ public static class Main
                 typeof(Patch_UpdateFreeroam), typeof(Patch_MarkFail),
                 typeof(Patch_UpdateInput_ConsumeYch));
             PatchManager.RegisterPatch(typeof(Patch_LevelDataDecode), () => Options.EffectRemoverOn);
-            PatchManager.RegisterPatch(typeof(Patch_SaveLevelEditorAction), () => Options.EffectRemoverOn && Options.EffectRemoverEnableSave);
+            PatchManager.RegisterPatch(typeof(Patch_SaveLevelEditorAction), () => Options.EffectRemoverOn);
             PatchManager.RegisterPatch(typeof(Patch_EditorLoadGameScene), () => Options.EffectRemoverOn);
             PatchManager.ApplyAll();
             SpectreState.SetGetKeyAsyncEnabled(Options.GetDataFromAsyncInput);
@@ -54,6 +54,7 @@ public static class Main
         }
         else
         {
+            SpectreState.SetGetKeyAsyncEnabled(false);
             PatchManager.UnpatchAll();
             AudioRecorder.StopAllMicrophones();
         }

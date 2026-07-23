@@ -17,6 +17,7 @@ internal static class ReplayEncoder
             writer.Write(ReplayConstants.FormatVersion);
 
             WriteMetadata(writer, replay.Metadata);
+            WriteStr(writer, replay.EndTime?.ToString("O") ?? "");
             WriteKeyEvents(writer, replay.KeyEvents);
             WriteHitContexts(writer, replay.HitContexts);
         }

@@ -30,7 +30,7 @@ internal class Patch_CaptureEnqueue
         data.KeyEvent_list.Add(new KeyEvent
         {
             KeyCode = element.Key,
-            IsPressed = (int)element.Type == 0,
+            IsPressed = element.Type == SkyHook.EventType.KeyPressed,
             SongPosition = songPos
         });
     }
@@ -42,6 +42,13 @@ internal class Patch_UpdateInput_ConsumeYch
 {
     private static void Prefix()
     {
-        ReplayRecorderYch.Consume();
+        try
+        {
+            ReplayRecorderYch.Consume();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogException(ex);
+        }
     }
 }

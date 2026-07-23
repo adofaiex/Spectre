@@ -24,7 +24,7 @@ public static class KeyManager
 
     internal static bool ValidateKey(string key, string currentDate)
     {
-        bool debug =true;
+        bool debug = false;
         if (debug) return true;
         currentDate = SystemInfo.deviceUniqueIdentifier + "-" + currentDate;
         try
