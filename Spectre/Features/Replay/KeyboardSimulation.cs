@@ -86,15 +86,15 @@ internal static class KeyboardSimulation
     {
         if (inputs.Count == 0) return;
         uint result = SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf<INPUT>());
-        if (result == 0)
-            Debug.LogWarning("SendInput failed: all inputs returned 0");
+        if (result != inputs.Count)
+            Debug.LogWarning($"SendInput partial failure: {result}/{inputs.Count} inputs processed");
     }
 
     internal static void SendInputs(INPUT[] inputs)
     {
         if (inputs.Length == 0) return;
         uint result = SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
-        if (result == 0)
-            Debug.LogWarning("SendInput failed: all inputs returned 0");
+        if (result != inputs.Length)
+            Debug.LogWarning($"SendInput partial failure: {result}/{inputs.Length} inputs processed");
     }
 }

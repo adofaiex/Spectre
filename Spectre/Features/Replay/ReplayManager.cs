@@ -67,6 +67,7 @@ internal static class ReplayManager
         {
             var replay = ReplayDecoder.ConvertFromOldFormat(replayData);
             if (replay == null) return false;
+            replay.EndTime = DateTimeOffset.UtcNow;
 
             byte[] data = ReplayEncoder.Encode(replay);
             string ext = no_encryption ? ReplayConstants.ExtensionNoEncrypt : ReplayConstants.Extension;

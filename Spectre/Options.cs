@@ -159,7 +159,15 @@ public static class Options
         if (!KeyConvertEnabled)
             return;
         foreach (KeyValuePair<ushort, ushort> item in key_code_convert_list)
-            key_code_convert[item.Key] = item.Value;
+        {
+            if (item.Key < 256)
+                key_code_convert[item.Key] = item.Value;
+        }
+        for (ushort num = 0; num < 256; num++)
+        {
+            if (key_code_convert[num] == 0xFFFF)
+                key_code_convert[num] = num;
+        }
     }
 
     internal static void OnHideGUI(ModEntry modEntry)

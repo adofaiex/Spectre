@@ -125,6 +125,7 @@ public static class SpectreState
         if (scnEditor.instance == null) return;
         var btn = scnEditor.instance.buttonNoFail;
         if (btn == null) return;
+        if (data == null || !data.bools.ContainsKey(IfNoFail)) return;
         var img = btn.GetComponent<UnityEngine.UI.Image>();
         img.color = data.bools[IfNoFail] ? Color.white : new Color(0.5f, 0.5f, 0.5f, 1f);
     }

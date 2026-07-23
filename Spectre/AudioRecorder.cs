@@ -183,7 +183,9 @@ public class AudioRecorder : MonoBehaviour
                 float[] array = new float[num3 * channels];
                 if (_getDataMethod == null)
                     _getDataMethod = typeof(AudioClip).GetMethod("GetData", BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(float[]), typeof(int) }, null);
-                _getDataMethod.Invoke(recordingClip, new object[] { array, num2 });
+                var clip = recordingClip;
+                if (clip == null) break;
+                _getDataMethod.Invoke(clip, new object[] { array, num2 });
                 ProcessAudioChunk(array);
                 num2 += num3;
                 num -= num3;
@@ -417,8 +419,11 @@ public class AudioRecorder : MonoBehaviour
         }
         if (recordingClip != (UnityEngine.Object)null)
         {
-            UnityEngine.Object.Destroy(recordingClip);
-            recordingClip = null;
+            if (processingThread == null || !processingThread.IsAlive)
+            {
+                UnityEngine.Object.Destroy(recordingClip);
+                recordingClip = null;
+            }
         }
         if (End_microphone && !string.IsNullOrEmpty(microphoneDevice))
         {

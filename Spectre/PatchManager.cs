@@ -333,8 +333,8 @@ internal static class PatchManager
             cts = _lazyPollCts;
             task = _lazyPollTask;
             _lazyPollCts = null;
+            cts?.Cancel();
         }
-        cts?.Cancel();
 
         if (task != null)
         {

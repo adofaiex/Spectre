@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using static Spectre.Features.Replay.ReplayKeys;
 using System.Collections.Generic;
 using System.IO;
@@ -37,7 +38,7 @@ internal static class ReplayDecoder
         {
             string endTimeStr = r.ReadString();
             if (!string.IsNullOrEmpty(endTimeStr))
-                replay.EndTime = DateTimeOffset.Parse(endTimeStr);
+                replay.EndTime = DateTimeOffset.Parse(endTimeStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
         }
         replay.KeyEvents = ReadKeyEvents(r);
         replay.HitContexts = ReadHitContexts(r);
