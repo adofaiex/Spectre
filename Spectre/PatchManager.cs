@@ -1,12 +1,13 @@
-﻿using System;
+﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
 using System.Threading.Tasks;
-using HarmonyLib;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Spectre;
 
@@ -24,6 +25,8 @@ internal static class PatchManager
     private static readonly object _lock = new();
     private static CancellationTokenSource _lazyPollCts;
     private static Task _lazyPollTask;
+    private static volatile bool _isQuitting = false;
+    private static bool _sceneIsLoading = false;
 
     public static void Initialize(Harmony harmony)
     {
@@ -37,7 +40,33 @@ internal static class PatchManager
             _delegateCache.Clear();
             _methodCache.Clear();
             _fieldCache.Clear();
+            _isQuitting = false; // 重置
         }
+        Application.quitting -= OnApplicationQuitting;
+        Application.quitting += OnApplicationQuitting;
+        SceneManager.sceneUnloaded -= OnSceneUnloaded;
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.sceneUnloaded += OnSceneUnloaded;
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private static void OnApplicationQuitting()
+    {
+        _isQuitting = true;
+        lock (_lock)
+        {
+            _lazyPollCts?.Cancel();
+        }
+    }
+
+    private static void OnSceneUnloaded(Scene scene)
+    {
+        _sceneIsLoading = true;  // 暂停轮询
+    }
+
+    private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        _sceneIsLoading = false; // 恢复轮询
     }
 
     public static void RegisterPatch(Type patchType, Func<bool> toggle = null)
@@ -53,6 +82,44 @@ internal static class PatchManager
     {
         foreach (var patchType in patchTypes)
             RegisterPatch(patchType, toggle);
+    }
+
+    public static void RefreshPatches()
+    {
+        lock (_lock)
+        {
+            if (_harmony == null) return;
+            foreach (var registration in _registeredPatches.Values)
+            {
+                if (registration.IsLazy) continue;
+                bool isApplied = _appliedPatches.Contains(registration.PatchType);
+                bool shouldBeEnabled = registration.IsEnabled();
+                if (shouldBeEnabled && !isApplied)
+                {
+                    try
+                    {
+                        _harmony.CreateClassProcessor(registration.PatchType).Patch();
+                        _appliedPatches.Add(registration.PatchType);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogWarning($"Failed to apply patch {registration.PatchType.Name}: {e.Message}");
+                    }
+                }
+                else if (!shouldBeEnabled && isApplied)
+                {
+                    try
+                    {
+                        _harmony.CreateClassProcessor(registration.PatchType).Unpatch();
+                        _appliedPatches.Remove(registration.PatchType);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogWarning($"Failed to unpatch {registration.PatchType.Name}: {e.Message}");
+                    }
+                }
+            }
+        }
     }
 
     public static void RegisterLazyPatches(Func<bool> trigger, params Type[] patchTypes)
@@ -179,16 +246,26 @@ internal static class PatchManager
         var token = cts.Token;
         try
         {
-            while (!token.IsCancellationRequested)
+            while (!token.IsCancellationRequested && !_isQuitting)
             {
-                ApplyLazyPatches();
-                await Task.Delay(100, token).ConfigureAwait(false);
+                if (!_sceneIsLoading)
+                {
+                    try
+                    {
+                        ApplyLazyPatches();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"[PatchManager] ApplyLazyPatches error: {ex}");
+                    }
+                    await Task.Delay(100, token).ConfigureAwait(false);
+                }
             }
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
         {
-            Debug.LogError($"[PatchManager] Async patch failed: {ex}");
+            Debug.LogError($"[PatchManager] Async patch task fatal error: {ex}");
         }
         finally
         {
@@ -202,6 +279,7 @@ internal static class PatchManager
 
     private static void ApplyLazyPatches()
     {
+        if (_isQuitting || _sceneIsLoading) return;
         lock (_lock)
         {
             if (_harmony == null) return;
@@ -242,6 +320,9 @@ internal static class PatchManager
 
     public static void UnpatchAll()
     {
+        // 设置退出标志，阻止新的轮询操作
+        _isQuitting = true;
+
         CancellationTokenSource cts;
         Task task;
         lock (_lock)
@@ -251,11 +332,28 @@ internal static class PatchManager
             _lazyPollCts = null;
         }
         cts?.Cancel();
+
         if (task != null)
         {
-            try { task.Wait(500); }
-            catch (Exception e) { Debug.LogWarning($"[PatchManager] Lazy poll task wait failed: {e.Message}"); }
+            try
+            {
+                if (!task.Wait(2000))
+                {
+                    Debug.LogWarning("[PatchManager] Lazy poll task did not stop within 2s, continuing anyway.");
+                }
+            }
+            catch (AggregateException ae)
+            {
+                foreach (var inner in ae.InnerExceptions)
+                    Debug.LogWarning($"[PatchManager] Lazy task exception: {inner.Message}");
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[PatchManager] Lazy task wait failed: {e.Message}");
+            }
         }
+
+        Application.quitting -= OnApplicationQuitting;
         lock (_lock)
         {
             _harmony?.UnpatchAll(_harmonyId);

@@ -165,7 +165,6 @@
     <Compile Include="Features\Replay\HitContext.cs" />
     <Compile Include="Features\Replay\ReplayKeys.cs" />
     <Compile Include="Features\EffectRemover\EffectRemover.cs" />
-    <Compile Include="Features\EffectRemover\EffectRemoverToggles.cs" />
     <Compile Include="Features\EffectRemover\Patch_EffectRemover.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

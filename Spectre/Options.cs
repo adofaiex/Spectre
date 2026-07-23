@@ -682,7 +682,7 @@ public static class Options
         if (prev != EffectRemoverOn)
         {
             Features.EffectRemover.EffectRemover.RefreshEditorSaveButtons();
-            Features.EffectRemover.EffectRemover.ToggleEffectRemoverPatches(EffectRemoverOn);
+            PatchManager.RefreshPatches();
         }
 
         if (!EffectRemoverOn)
@@ -700,7 +700,7 @@ public static class Options
             {
                 EffectRemoverEnableSave = !EffectRemoverEnableSave;
                 Features.EffectRemover.EffectRemover.RefreshEditorSaveButtons();
-                Features.EffectRemover.EffectRemover.ToggleEditorSavePatch(EffectRemoverEnableSave);
+                PatchManager.RefreshPatches();
             }
         });
 
